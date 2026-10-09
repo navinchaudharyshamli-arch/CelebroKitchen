@@ -77,10 +77,17 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-        <div className="mt-4 text-center">
-          <a href="/forgot" className="text-sm text-accent hover:underline">
-            Forgot PIN?
-          </a>
+        <div className="mt-4 text-center space-y-2">
+          <div>
+            <a href="/forgot" className="text-sm text-accent hover:underline">
+              Forgot PIN?
+            </a>
+          </div>
+          <div>
+            <a href="/admin-login" className="text-xs text-ink-2 hover:underline">
+              Admin / Staff Portal Sign In
+            </a>
+          </div>
         </div>
       </div>
       <footer className="mt-8 text-xs text-ink-2 text-center max-w-xs">
