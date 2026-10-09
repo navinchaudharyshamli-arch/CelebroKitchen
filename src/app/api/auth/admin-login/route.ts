@@ -30,11 +30,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify staff profile role
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from('staff_profiles')
       .select('role')
       .eq('user_id', data.user.id)
-      .single();
+      .maybeSingle();
+
+    // Auto-provision initial admin if staff_profiles has 0 rows or missing
+    if (!profile) {
+      const { count } = await supabase
+        .from('staff_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (count === 0 || count === null) {
+        await supabase.from('staff_profiles').insert({
+          user_id: data.user.id,
+          role: 'admin',
+          display_name: 'Mess Owner',
+        });
+        profile = { role: 'admin' };
+      }
+    }
 
     if (!profile || (profile.role !== 'admin' && profile.role !== 'staff')) {
       return NextResponse.json(
