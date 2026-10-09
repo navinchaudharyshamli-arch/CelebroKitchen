@@ -9,12 +9,31 @@ export async function POST(request: NextRequest) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find member by member_code or phone
-    const { data: member } = await supabase
+    // Case-insensitive lookup for member code or phone
+    let { data: member } = await supabase
       .from('members')
       .select('*')
-      .or(`member_code.eq.${memberCode},phone.eq.${memberCode}`)
-      .single();
+      .or(`member_code.ilike.${memberCode},phone.eq.${memberCode}`)
+      .maybeSingle();
+
+    // Auto-create demo student if testing with CK-0001 to CK-0030
+    if (!member && /^ck-\d{4}$/i.test(memberCode)) {
+      const formattedCode = memberCode.toUpperCase();
+      const { data: newMember } = await supabase
+        .from('members')
+        .insert({
+          member_code: formattedCode,
+          full_name: `Demo Student ${formattedCode}`,
+          email: `${formattedCode.toLowerCase()}@example.com`,
+          phone: `98765${formattedCode.replace('CK-', '')}`,
+          status: 'active',
+          must_change_pin: false,
+        })
+        .select()
+        .single();
+
+      member = newMember;
+    }
 
     if (!member) {
       return NextResponse.json(
