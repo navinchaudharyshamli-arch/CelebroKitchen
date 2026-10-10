@@ -1,135 +1,125 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-export default function AdminDashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
-  const [stats, setStats] = useState({
-    activeMembers: 0,
-    awayOnHoliday: 0,
-    membersWithCredits: 0,
-    outstandingDues: 0,
-    breakfast: { expected: 0, skipped: 0, extra: 0, netComing: 0 },
-    lunch: { expected: 0, skipped: 0, extra: 0, netComing: 0 },
-    dinner: { expected: 0, skipped: 0, extra: 0, netComing: 0 },
-  });
-
-  const fetchDashboardData = async () => {
-    try {
-      const res = await fetch('/api/admin/dashboard-stats');
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const handlePopulateDemoData = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      if (res.ok) {
-        await fetchDashboardData();
-        alert('30 Demo Students & Active Subscriptions Created!');
-      } else {
-        alert('Failed to seed demo data');
-      }
-    } catch (err) {
-      alert('Error running seed');
-    } finally {
-      setSeeding(false);
-    }
-  };
+export default function AdminConsolePage() {
+  const [activeTab, setActiveTab] = useState<'today' | 'members' | 'money' | 'settings' | 'log'>('today');
 
   return (
     <main className="min-h-screen bg-bg text-ink p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header & Tabs */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line">
           <div>
-            <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-            <p className="text-sm text-ink-2">Live Mess Operations & Headcount</p>
+            <h1 className="text-2xl font-semibold">Admin Console</h1>
+            <p className="text-xs text-ink-2">Celebro Kitchen Management</p>
           </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={handlePopulateDemoData}
-              disabled={seeding}
-              className="px-4 py-2 bg-accent text-white font-medium text-xs rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {seeding ? 'Seeding...' : 'Populate 30 Demo Students'}
-            </button>
-            <a
-              href="/admin-login"
-              className="px-4 py-2 bg-surface-2 border border-line text-xs font-medium rounded-xl hover:bg-line transition-colors"
-            >
-              Sign Out
-            </a>
-          </div>
+          <a
+            href="/login"
+            className="px-4 py-2 bg-surface-2 border border-line text-xs font-medium rounded-xl hover:bg-line transition-colors self-start sm:self-auto"
+          >
+            Sign Out
+          </a>
         </header>
 
-        {/* Live Meal Headcount Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface p-5 rounded-2xl border border-line">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-accent uppercase tracking-wider">Breakfast</span>
-              <span className="text-xs text-ink-2">Cutoff 07:00 AM</span>
-            </div>
-            <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{stats.breakfast.netComing}</div>
-            <p className="text-xs text-ink-2 mt-2">
-              Cook Figure (Net Coming) • {stats.breakfast.expected} Expected, {stats.breakfast.skipped} Skipped
-            </p>
-          </div>
+        {/* Tab Switcher */}
+        <nav className="flex space-x-2 border-b border-line pb-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('today')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-colors ${
+              activeTab === 'today' ? 'bg-accent text-white' : 'bg-surface-2 text-ink-2 hover:text-ink'
+            }`}
+          >
+            Today (Dashboard)
+          </button>
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-colors ${
+              activeTab === 'members' ? 'bg-accent text-white' : 'bg-surface-2 text-ink-2 hover:text-ink'
+            }`}
+          >
+            Members
+          </button>
+          <button
+            onClick={() => setActiveTab('money')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-colors ${
+              activeTab === 'money' ? 'bg-accent text-white' : 'bg-surface-2 text-ink-2 hover:text-ink'
+            }`}
+          >
+            Money & Dues
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-colors ${
+              activeTab === 'settings' ? 'bg-accent text-white' : 'bg-surface-2 text-ink-2 hover:text-ink'
+            }`}
+          >
+            Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('log')}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-colors ${
+              activeTab === 'log' ? 'bg-accent text-white' : 'bg-surface-2 text-ink-2 hover:text-ink'
+            }`}
+          >
+            Audit Log
+          </button>
+        </nav>
 
-          <div className="bg-surface p-5 rounded-2xl border border-line">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-accent uppercase tracking-wider">Lunch</span>
-              <span className="text-xs text-ink-2">Cutoff 11:00 AM</span>
+        {/* Tab 1: Today Dashboard */}
+        {activeTab === 'today' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-surface p-5 rounded-2xl border border-line">
+                <span className="text-xs font-semibold text-accent uppercase tracking-wider">Breakfast</span>
+                <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">0</div>
+                <p className="text-xs text-ink-2 mt-2">Cook Figure (Net Coming)</p>
+              </div>
+              <div className="bg-surface p-5 rounded-2xl border border-line">
+                <span className="text-xs font-semibold text-accent uppercase tracking-wider">Lunch</span>
+                <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">0</div>
+                <p className="text-xs text-ink-2 mt-2">Cook Figure (Net Coming)</p>
+              </div>
+              <div className="bg-surface p-5 rounded-2xl border border-line">
+                <span className="text-xs font-semibold text-accent uppercase tracking-wider">Dinner</span>
+                <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">0</div>
+                <p className="text-xs text-ink-2 mt-2">Cook Figure (Net Coming)</p>
+              </div>
             </div>
-            <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{stats.lunch.netComing}</div>
-            <p className="text-xs text-ink-2 mt-2">
-              Cook Figure (Net Coming) • {stats.lunch.expected} Expected, {stats.lunch.skipped} Skipped
-            </p>
           </div>
+        )}
 
-          <div className="bg-surface p-5 rounded-2xl border border-line">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-accent uppercase tracking-wider">Dinner</span>
-              <span className="text-xs text-ink-2">Cutoff 06:30 PM</span>
-            </div>
-            <div className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{stats.dinner.netComing}</div>
-            <p className="text-xs text-ink-2 mt-2">
-              Cook Figure (Net Coming) • {stats.dinner.expected} Expected, {stats.dinner.skipped} Skipped
-            </p>
+        {/* Tab 2: Members */}
+        {activeTab === 'members' && (
+          <div className="bg-surface p-6 rounded-2xl border border-line space-y-4">
+            <h2 className="text-lg font-semibold">Members Management</h2>
+            <p className="text-xs text-ink-2">Member directory, add student, CSV import, and plan amendments.</p>
           </div>
-        </section>
+        )}
 
-        {/* Overview Stats */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-surface p-4 rounded-xl border border-line">
-            <div className="text-2xl font-bold tabular-nums">{stats.activeMembers}</div>
-            <p className="text-xs text-ink-2">Active Members</p>
+        {/* Tab 3: Money */}
+        {activeTab === 'money' && (
+          <div className="bg-surface p-6 rounded-2xl border border-line space-y-4">
+            <h2 className="text-lg font-semibold">Money & Dues Ledger</h2>
+            <p className="text-xs text-ink-2">Record member payments, UPI/Cash receipts, and dues status.</p>
           </div>
-          <div className="bg-surface p-4 rounded-xl border border-line">
-            <div className="text-2xl font-bold tabular-nums">{stats.awayOnHoliday}</div>
-            <p className="text-xs text-ink-2">Away on Holiday</p>
+        )}
+
+        {/* Tab 4: Settings */}
+        {activeTab === 'settings' && (
+          <div className="bg-surface p-6 rounded-2xl border border-line space-y-4">
+            <h2 className="text-lg font-semibold">Mess Settings</h2>
+            <p className="text-xs text-ink-2">Configure meal names, times, cutoffs, prices, and staff accounts.</p>
           </div>
-          <div className="bg-surface p-4 rounded-xl border border-line">
-            <div className="text-2xl font-bold tabular-nums">{stats.membersWithCredits}</div>
-            <p className="text-xs text-ink-2">Members w/ Credits</p>
+        )}
+
+        {/* Tab 5: Audit Log */}
+        {activeTab === 'log' && (
+          <div className="bg-surface p-6 rounded-2xl border border-line space-y-4">
+            <h2 className="text-lg font-semibold">Audit Log</h2>
+            <p className="text-xs text-ink-2">System change history and CSV exports.</p>
           </div>
-          <div className="bg-surface p-4 rounded-xl border border-line">
-            <div className="text-2xl font-bold tabular-nums">₹{stats.outstandingDues}</div>
-            <p className="text-xs text-ink-2">Outstanding Dues</p>
-          </div>
-        </section>
+        )}
       </div>
     </main>
   );

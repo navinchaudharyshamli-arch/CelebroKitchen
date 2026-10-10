@@ -10,14 +10,14 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Case-insensitive lookup for member code or phone
-    let { data: member } = await supabase
+    let { data: member, error: memberError } = await supabase
       .from('members')
       .select('*')
       .or(`member_code.ilike.${memberCode},phone.eq.${memberCode}`)
       .maybeSingle();
 
     // Auto-create demo student if testing with CK-0001 to CK-0030
-    if (!member && /^ck-\d{4}$/i.test(memberCode)) {
+    if ((!member || memberError) && /^ck-\d{4}$/i.test(memberCode)) {
       const formattedCode = memberCode.toUpperCase();
       const { data: newMember } = await supabase
         .from('members')
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
           must_change_pin: false,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       member = newMember;
     }
